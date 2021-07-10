@@ -1,72 +1,150 @@
-// getting all required elements
-const inputBox = document.querySelector(".inputField input");
-const addBtn = document.querySelector(".inputField button");
-const todoList = document.querySelector(".todoList");
-const deleteAllBtn = document.querySelector(".footer button");
-// onkeyup event
-inputBox.onkeyup = ()=>{
-  let userEnteredValue = inputBox.value; //getting user entered value
-  if(userEnteredValue.trim() != 0){ //if the user value isn't only spaces
-    addBtn.classList.add("active"); //active the add button
-  }else{
-    addBtn.classList.remove("active"); //unactive the add button
-  }
-}
-showTasks(); //calling showTask function
-addBtn.onclick = ()=>{ //when user click on plus icon button
-  let userEnteredValue = inputBox.value; //getting input field value
-  let getLocalStorageData = localStorage.getItem("New Todo"); //getting localstorage
-  if(getLocalStorageData == null){ //if localstorage has no data
-    listArray = []; //create a blank array
-  }else{
-    listArray = JSON.parse(getLocalStorageData);  //transforming json string into a js object
-  }
-  listArray.push(userEnteredValue); //pushing or adding new value in array
-  localStorage.setItem("New Todo", JSON.stringify(listArray)); //transforming js object into a json string
-  showTasks(); //calling showTask function
-  addBtn.classList.remove("active"); //unactive the add button once the task added
-}
-function showTasks(){
-  let getLocalStorageData = localStorage.getItem("New Todo");
-  if(getLocalStorageData == null){
-    listArray = [];
-  }else{
-    listArray = JSON.parse(getLocalStorageData); 
-  }
-  const pendingTasksNumb = document.querySelector(".pendingTasks");
-  pendingTasksNumb.textContent = listArray.length; //passing the array length in pendingtask
-  if(listArray.length > 0){ //if array length is greater than 0
-    deleteAllBtn.classList.add("active"); //active the delete button
-  }else{
-    deleteAllBtn.classList.remove("active"); //unactive the delete button
-  }
-  let newLiTag = "";
-  listArray.forEach((element, index) => {
-    newLiTag += `<li>${element}<span class="icon" onclick="deleteTask(${index})"><i class="fas fa-trash"></i><button class="edit">Edit
-    </button></span></li>`;
-  });
+showtask();
+let addtaskinput = document.getElementById("addtaskinput");
+let addtaskbtn = document.getElementById("addtaskbtn");
 
-  todoList.innerHTML = newLiTag; //adding new li tag inside ul tag
-  inputBox.value = ""; //once task added leave the input field blank
+addtaskbtn.addEventListener("click", function(){
+    addtaskinputval = addtaskinput.value;
+    if(addtaskinputval.trim()!=0){
+        let webtask = localStorage.getItem("localtask");
+        if(webtask == null){
+            taskObj = [];
+        }
+        else{
+            taskObj = JSON.parse(webtask);
+        }
+        taskObj.push({'task_name':addtaskinputval, 'completeStatus':false});
+    
+        localStorage.setItem("localtask", JSON.stringify(taskObj));
+        addtaskinput.value = '';
+    }
+    showtask();
+})
+
+// showtask
+function showtask(){
+    let webtask = localStorage.getItem("localtask");
+    if(webtask == null){
+        taskObj = [];
+    }
+    else{
+        taskObj = JSON.parse(webtask);
+    }
+    let html = '';
+    let addedtasklist = document.getElementById("addedtasklist");
+    taskObj.forEach((item, index) => {
+
+        if(item.completeStatus==true){
+            taskCompleteValue = `<td class="completed">${item.task_name}</td>`;
+        }else{
+            taskCompleteValue = `<td>${item.task_name}</td>`;
+        }
+        html += `<tr>
+                    <th scope="row">${index+1}</th>
+                    ${taskCompleteValue}
+                    <td><button type="button" onclick="edittask(${index})" class="text-primary"><i class="fa fa-edit"></i>Edit</button></td>
+                    <td><button type="button" class="text-success" id=${index}><i class="fa fa-check-square-o"></i>Complete</button></td>
+                    <td><button type="button" onclick="deleteitem(${index})" class="text-danger"><i class="fa fa-trash"></i>Delete</button></td>
+                </tr>`;
+    });
+    addedtasklist.innerHTML = html;
 }
-// delete task function
-function deleteTask(index){
-  let getLocalStorageData = localStorage.getItem("New Todo");
-  listArray = JSON.parse(getLocalStorageData);
-  listArray.splice(index, 1); //delete or remove the li
-  localStorage.setItem("New Todo", JSON.stringify(listArray));
-  showTasks(); //call the showTasks function
+
+// edittask
+function edittask(index){
+    let saveindex = document.getElementById("saveindex");
+    let addtaskbtn = document.getElementById("addtaskbtn");
+    let savetaskbtn = document.getElementById("savetaskbtn");
+    saveindex.value = index;
+    let webtask = localStorage.getItem("localtask");
+    let taskObj = JSON.parse(webtask); 
+    
+    addtaskinput.value = taskObj[index]['task_name'];
+    addtaskbtn.style.display="none";
+    savetaskbtn.style.display="block";
 }
-function editTask(index){
-  let getLocalStorageData = localStorage.getItem("New Todo");
-  listArray = JSON.parse(getLocalStorageData);
-  listArray.splice(index, 1); //delete or remove the li
-  localStorage.setItem("New Todo", JSON.stringify(listArray));
-  showTasks(); //call the showTasks function
+
+// savetask
+let savetaskbtn = document.getElementById("savetaskbtn");
+savetaskbtn.addEventListener("click", function(){
+    let addtaskbtn = document.getElementById("addtaskbtn");
+    let webtask = localStorage.getItem("localtask");
+    let taskObj = JSON.parse(webtask); 
+    let saveindex = document.getElementById("saveindex").value;
+    
+    for (keys in taskObj[saveindex]) {
+        if(keys == 'task_name'){
+            taskObj[saveindex].task_name = addtaskinput.value;
+        }
+      }
+    // taskObj[saveindex] = {'task_name':addtaskinput.value, 'completeStatus':false} ;
+  //  taskObj[saveindex][task_name] = addtaskinput.value;
+    savetaskbtn.style.display="none";
+    addtaskbtn.style.display="block";
+    localStorage.setItem("localtask", JSON.stringify(taskObj));
+    addtaskinput.value='';
+    showtask();
+})
+// deleteitem
+function deleteitem(index){
+    let webtask = localStorage.getItem("localtask");
+    let taskObj = JSON.parse(webtask);
+    taskObj.splice(index, 1);
+    localStorage.setItem("localtask", JSON.stringify(taskObj));
+    showtask();
 }
-// delete all tasks function
-deleteAllBtn.onclick = ()=>{
-  listArray = []; //empty the array
-  localStorage.setItem("New Todo", JSON.stringify(listArray)); //set the item in localstorage
-  showTasks(); //call the showTasks function
-}
+
+// complete task
+let addedtasklist = document.getElementById("addedtasklist");
+    addedtasklist.addEventListener("click", function(e){
+       // console.log(e);
+        
+        // showtask();
+        let webtask = localStorage.getItem("localtask");
+        let taskObj = JSON.parse(webtask);
+        
+        let mytarget = e.target;
+        if(mytarget.classList[0] === 'text-success'){
+        let mytargetid = mytarget.getAttribute("id");
+        
+        
+        // let taskValue = taskObj[mytargetid]['task_name'];
+        
+        mytargetpresibling = mytarget.parentElement.previousElementSibling.previousElementSibling;
+            
+            // let mynewelem = mytargetpresibling.classList.toggle("completed");
+            // taskObj.splice(mytargetid,1,mynewelem);
+            for (keys in taskObj[mytargetid]) {
+                if(keys == 'completeStatus' && taskObj[mytargetid][keys]==true){
+                    taskObj[mytargetid].completeStatus = false;
+                   // taskObj[mytargetid] = {'task_name':taskValue, 'completeStatus':false};
+                }else if(keys == 'completeStatus' && taskObj[mytargetid][keys]==false){
+                    taskObj[mytargetid].completeStatus = true;
+                    //taskObj[mytargetid] = {'task_name':taskValue, 'completeStatus':true};
+                }
+              }
+        //}
+       // showtask();        
+        localStorage.setItem("localtask", JSON.stringify(taskObj));
+        showtask();
+    }
+    })
+
+// deleteall
+let deleteallbtn = document.getElementById("deleteallbtn");
+deleteallbtn.addEventListener("click", function(){
+    let savetaskbtn = document.getElementById("savetaskbtn");
+    let addtaskbtn = document.getElementById("addtaskbtn");
+    let webtask = localStorage.getItem("localtask");
+    let taskObj = JSON.parse(webtask);
+    if(webtask == null){
+        taskObj = [];
+    }
+    else{
+        taskObj = JSON.parse(webtask);
+        taskObj = [];
+    }
+    savetaskbtn.style.display="none";
+    addtaskbtn.style.display="block";
+    localStorage.setItem("localtask", JSON.stringify(taskObj));
+    showtask();
+})
